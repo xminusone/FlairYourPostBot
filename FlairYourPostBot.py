@@ -6,28 +6,28 @@ from urllib import quote
 def main():
     username = "USERNAME"
     password = "PASSWORD"
-    subreddit_name = "mod"
+    subreddit_name = "multihub"
 
     #Bot Settings
     sleep_time = 300 # time (in seconds) the bot sleeps before performing a new check
-    time_until_message = 180 # time (in seconds) a person has to add flair before a initial message is sent
+    time_until_message = 60 # time (in seconds) a person has to add flair before a initial message is sent
     time_until_remove = 600 # time (in seconds) after a message is sent that a person has to add flair before the post is removed and they have to resubmit it
 
     post_grab_limit = 20 # how many new posts to check at a time.
     post_memory_limit = 100 # how many posts the bot should remember before rewriting over it
 
     #Initial Message that tells then that they need to flair their post
-    add_flair_subject_line = "You have not tagged your post."
-    add_flair_message = "[Your recent post]({post_url}) does not have any flair and has been removed.\n\nPlease add flair to your post. If you do not add flair within **" + formatTimeString( time_until_remove ) + "**, you will have to resubmit your post. Don't know how to flair your post? Click [here](http://imgur.com/a/m3FI3) to view this helpful guide on how to flair your post. if you are using the mobile version of the site click the hamburger menu in the top right of the screen and switch to the desktop site and then follow the instructions as you would on desktop."
+    add_flair_subject_line = "You have not categorized your post."
+    add_flair_message = "[Your recent submission to /r/multihub]({post_url}) hasn't been categorized.\n\nYou can categorize your post by adding flair. If you do not add flair within **" + formatTimeString( time_until_remove ) + "**, your submission will be removed. Don't know how to flair your post? Click [here](http://imgur.com/a/m3FI3) to view this helpful guide on how to flair your post. if you are using the mobile version of the site click the hamburger menu in the top right of the screen and switch to the desktop site and then follow the instructions as you would on desktop."
 
     #Second message telling them to resubmit their post since they have not flaired in time
-    remove_post_subject_line = "You have not tagged your post within the allotted amount of time."
-    remove_post_message = "[Your recent post]({post_url}) still does not have any flair and will remain removed, feel free to resubmit your post and remember to flair it once it is posted.*"
+    remove_post_subject_line = "You have not categorized your post within the allotted amount of time."
+    remove_post_message = "[Your recent post]({post_url}) still does not have any flair and has been removed. Feel free to resubmit your post and remember to flair it once it is posted.*"
 
     no_flair = []
     already_done = []
     post_age = time_until_message + time_until_remove
-    user_agent = ( "Auto flair moderator for reddit created by /u/kooldawgstar") # tells reddit the bot's purpose.
+    user_agent = ( "Flair Enforcement for /r/Multihub by /u/x_minus_one") # tells reddit the bot's purpose.
     session = praw.Reddit( user_agent = user_agent )
     session.login( username = username, password = password )
     subreddit=session.get_subreddit( subreddit_name )
@@ -65,7 +65,6 @@ def main():
                                 #login and send user message
                                 session.login( username = username, password = password )
                                 session.send_message( author, add_flair_subject_line, final_add_flair_message )
-                                submission.remove()
                                 no_flair.append( submission.id )
                             #if the post has flair, it is added to already_done
                             else:
@@ -78,29 +77,18 @@ def main():
                             if ( submission.link_flair_text is None ):
                                 author=submission.author
                                 final_remove_post_message = remove_post_message.format( post_url = submission.short_link )
-                                #login, send message, keeps the post removed
+                                #login, send message, removes the post
                                 session.login( username = username, password = password )
+                                submission.remove()
                                 session.send_message( author, remove_post_subject_line, final_remove_post_message )
                                 already_done.append( submission.id )
                             else:
-                                submission.approve()
                                 already_done.append( submission.id )
         #handles runtime errors.
         except Exception:
             #clears the exception
             exc_clear()
         sleep( sleep_time )
-
-#Auto accept mod invites
-def acceptmodinvites():
-    for message in r.get_unread():
-        if message.body.startswith('**gadzooks!'):
-            sr = r.get_info(thing_id=message.subreddit.fullname)
-            try:
-                sr.accept_moderator_invite()
-            except praw.errors.InvalidInvite:
-                continue
-            message.mark_as_read()
 
 # turn a time in seconds into a human readable string
 def formatTimeString(time_in):
@@ -128,4 +116,3 @@ def formatTimeString(time_in):
 
 #call main fuctions
 main()
-acceptmodinvites()
